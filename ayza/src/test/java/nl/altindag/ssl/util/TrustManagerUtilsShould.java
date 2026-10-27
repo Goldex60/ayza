@@ -15,6 +15,7 @@
  */
 package nl.altindag.ssl.util;
 
+import nl.altindag.desidero.OperatingSystem;
 import nl.altindag.log.LogCaptor;
 import nl.altindag.ssl.exception.GenericSecurityException;
 import nl.altindag.ssl.exception.GenericTrustManagerException;
@@ -213,6 +214,29 @@ class TrustManagerUtilsShould {
                 assertThat(trustManager.get()).isInstanceOf(SystemX509ExtendedTrustManager.class);
                 assertThat((trustManager).get().getAcceptedIssuers()).hasSizeGreaterThan(0);
             }
+        }
+    }
+
+    @Test
+    void keepSystemTrustManagerWhenWindowsCAInitializationFails() {
+        KeyStore trustStore = KeyStoreUtils.loadKeyStore(KEYSTORE_LOCATION + TRUSTSTORE_FILE_NAME, TRUSTSTORE_PASSWORD);
+
+        try (MockedStatic<OperatingSystem> operatingSystemMock = mockStatic(OperatingSystem.class);
+             MockedStatic<KeyStoreUtils> keyStoreUtilsMock = mockStatic(KeyStoreUtils.class, invocation -> invocation.callRealMethod());
+             MockedStatic<WindowsCATrustManagerFactory> windowsCAMock = mockStatic(WindowsCATrustManagerFactory.class)) {
+
+            operatingSystemMock.when(OperatingSystem::get).thenReturn(OperatingSystem.WINDOWS);
+
+            keyStoreUtilsMock.when(KeyStoreUtils::loadSystemKeyStores).thenReturn(Collections.singletonList(trustStore));
+
+            windowsCAMock.when(WindowsCATrustManagerFactory::create).thenThrow(new IllegalStateException("Windows CA store unavailable"));
+
+            Optional<X509ExtendedTrustManager> trustManager = TrustManagerUtils.createTrustManagerWithSystemTrustedCertificates();
+
+            assertThat(trustManager).isPresent();
+            assertThat(trustManager.get()).isInstanceOf(SystemX509ExtendedTrustManager.class);
+
+            assertThat(trustManager.get().getAcceptedIssuers()).hasSize(1);
         }
     }
 

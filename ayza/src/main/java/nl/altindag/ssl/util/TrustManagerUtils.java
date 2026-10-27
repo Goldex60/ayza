@@ -67,6 +67,8 @@ import static nl.altindag.laleler.ValidationUtils.requireNotEmpty;
  */
 public final class TrustManagerUtils {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(TrustManagerUtils.class);
+
     private TrustManagerUtils() {}
 
     public static X509ExtendedTrustManager combine(X509TrustManager... trustManagers) {
@@ -101,7 +103,7 @@ public final class TrustManagerUtils {
                 X509ExtendedTrustManager windowsCATrustManager = WindowsCATrustManagerFactory.create();
                 trustManager = combine(trustManager, windowsCATrustManager);
             } catch (Exception e) {
-                throw new GenericTrustManagerException(e);
+                LOGGER.warn(String.format("Could not initialize Windows CA TrustManager. Falling back to system trusted certificates: %s", e.getMessage()));
             }
         }
 
