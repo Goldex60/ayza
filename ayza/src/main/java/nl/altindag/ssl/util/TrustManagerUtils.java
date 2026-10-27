@@ -94,6 +94,17 @@ public final class TrustManagerUtils {
         }
 
         X509ExtendedTrustManager trustManager = createTrustManager(trustStores.toArray(new KeyStore[]{}));
+
+        if (OperatingSystem.get() == OperatingSystem.WINDOWS) {
+            try {
+                // Include Windows CA certificates as intermediate sources for PKIX path building.
+                X509ExtendedTrustManager windowsCATrustManager = WindowsCATrustManagerFactory.create();
+                trustManager = combine(trustManager, windowsCATrustManager);
+            } catch (Exception e) {
+                throw new GenericTrustManagerException(e);
+            }
+        }
+
         return Optional.of(new SystemX509ExtendedTrustManager(trustManager, OperatingSystem.get().name().toLowerCase()));
     }
 
