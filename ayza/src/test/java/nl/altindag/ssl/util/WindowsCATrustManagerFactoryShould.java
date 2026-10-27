@@ -132,6 +132,21 @@ class WindowsCATrustManagerFactoryShould {
     }
 
     @Test
+    void keepIntermediateCertificatesOutOfTrustAnchors() throws Exception {
+        X509Certificate root = loadCertificate("root-ca.pem");
+        X509Certificate intermediate = loadCertificate("intermediate-ca.pem");
+
+        X509ExtendedTrustManager trustManager =
+                WindowsCATrustManagerFactory.create(
+                        Collections.singleton(new TrustAnchor(root, null)),
+                        Collections.singletonList(intermediate));
+
+        assertThat(trustManager.getAcceptedIssuers())
+                .contains(root)
+                .doesNotContain(intermediate);
+    }
+
+    @Test
     void buildCertificatePathUsingIntermediateCertificateFromCertStore() throws Exception {
 
         // Load the test certificate chain.
