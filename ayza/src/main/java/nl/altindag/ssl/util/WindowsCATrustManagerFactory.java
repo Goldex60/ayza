@@ -16,6 +16,7 @@
 package nl.altindag.ssl.util;
 
 import nl.altindag.desidero.OperatingSystem;
+import nl.altindag.desidero.WindowsCertificateUtils;
 import nl.altindag.ssl.exception.GenericKeyStoreException;
 import nl.altindag.sude.Logger;
 import nl.altindag.sude.LoggerFactory;
@@ -71,7 +72,7 @@ final class WindowsCATrustManagerFactory {
         LOGGER.info(String.format("Loaded %d Windows trust anchors", trustAnchors.size()));
 
         List<X509Certificate> intermediates =
-                OperatingSystem.WINDOWS.getIntermediateCertificates();
+		WindowsCertificateUtils.getInstance().getIntermediateCertificates();
 
         LOGGER.info(String.format("Loaded %d Windows CA certificates", intermediates.size()));
 
